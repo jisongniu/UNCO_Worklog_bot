@@ -90,7 +90,7 @@ async function checkForTaskStatusUpdates() {
     if (allResults.length > 0) {
       for (const page of allResults) {
         const status = page.properties.Action?.status?.name;
-        console.log(`页面 ${page.id} 的 Action 状态: ${status}`);
+        console.log(`页面 ${page.properties.Activity?.title[0]?.plain_text || '无标题'} 的 Action 状态: ${status}`);
         if (status === '进行中' || status === '已完成') {
           const message = formatTaskStatusMessage(page, status);
           try {
@@ -125,7 +125,6 @@ function formatDateTime(dateTimeString) {
     day: '2-digit',
     hour: '2-digit',
     minute: '2-digit',
-    second: '2-digit',
     hour12: false,
     timeZone: 'Asia/Shanghai'
   }).replace(/\//g, '-');
