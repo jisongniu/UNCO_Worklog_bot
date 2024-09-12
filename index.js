@@ -8,6 +8,7 @@ const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN);
 
 const databaseId = process.env.NOTION_DATABASE_ID;
 const channelId = process.env.TELEGRAM_CHANNEL_ID;
+const topicId = process.env.TELEGRAM_TOPIC_ID; 
 
 // 添加一个变量来跟踪是否是第一次运行
 let isFirstRun = true;
@@ -26,10 +27,12 @@ async function debugConnections() {
 
   // 测试Telegram消息发送
   try {
-    const testMessage = await bot.sendMessage(channelId, '我是Un小Log，开始赛博上班～\n\n咱先看看过去一天有哪些新鲜事儿');
+    const testMessage = await bot.sendMessage(channelId, '我是Un小Log，开始赛博上班～\n\n咱先看看过去一天有哪些新鲜事儿', {
+      message_thread_id: topicId
+    });
     console.log('Telegram消息发送成功。消息ID:', testMessage.message_id);
   } catch (error) {
-    console.error('Telegram息发送失:', error.message);
+    console.error('Telegram消息发送失败:', error.message);
   }
 }
 
@@ -92,7 +95,11 @@ async function checkForTaskStatusUpdates() {
         if (status === '进行中' || status === '已完成') {
           const message = formatTaskStatusMessage(page, status);
           try {
-            await bot.sendMessage(channelId, message, { parse_mode: 'HTML', disable_web_page_preview: true });
+            await bot.sendMessage(channelId, message, { 
+              parse_mode: 'HTML', 
+              disable_web_page_preview: true,
+              message_thread_id: topicId
+            });
             console.log(`已发送更新到Telegram: ${page.properties.Activity?.title[0]?.plain_text || '无标题'}`);
           } catch (error) {
             console.error(`发送消息失败: ${error.message}`);
@@ -217,8 +224,8 @@ async function checkForTaskContentUpdates() {
       if (newComments.length > 0) {
         updateMessage += `\n💬 <b>新评论</b>：${newComments.length}条\n`;
         newComments.forEach((comment, index) => {
-          const commentAuthor = comment.created_by.name || comment.created_by.person?.name || '匿名用户';
-          const commentContent = comment.rich_text[0]?.plain_text || '空评论';
+            const commentAuthor = comment.created_by.name || comment.created_by.person?.name || '匿名用户';
+            const commentContent = comment.rich_text[0]?.plain_text || '空评论';
           const commentTime = formatDateTime(comment.created_time);
           updateMessage += `\n${index + 1}. <i>${commentAuthor}</i> (${commentTime}): ${commentContent.substring(0, 50)}${commentContent.length > 50 ? '...' : ''}`;
         });
@@ -227,7 +234,11 @@ async function checkForTaskContentUpdates() {
       updateMessage += `\n\n🔍 <a href="${page.url}">前排围观！</a>`;
 
       try {
-        await bot.sendMessage(channelId, updateMessage, { parse_mode: 'HTML', disable_web_page_preview: true });
+        await bot.sendMessage(channelId, updateMessage, { 
+          parse_mode: 'HTML', 
+          disable_web_page_preview: true,
+          message_thread_id: topicId
+        });
         console.log(`已发送更新到Telegram: ${pageTitle}`);
       } catch (error) {
         console.error(`发送消息失败: ${error.message}`);

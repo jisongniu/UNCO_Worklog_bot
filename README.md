@@ -21,7 +21,6 @@
 
 您可以在 [CHANGELOG.md](CHANGELOG.md) 文件中查看所有的版本更新历史。
 
-我们建议您定期查看更新日志，以了解项目的最新变化和改进.
 
 ## 技术栈
 
@@ -49,7 +48,6 @@
    ```
    npm install
    ```
-
 3. 配置环境变量：
    创建 `.env` 文件，并填写以下必要的环境变量：
    ```
@@ -57,8 +55,18 @@
    NOTION_DATABASE_ID=你的Notion数据库ID
    TELEGRAM_BOT_TOKEN=你的Telegram机器人令牌
    TELEGRAM_CHANNEL_ID=目标Telegram频道ID
+   TELEGRAM_TOPIC_ID=目标Telegram Topic ID
    ```
-   这些环境变量的获取网上都有相应的教程， 这里就不赘述了。
+   这些环境变量的获取网上都有相应的教程，这里就不赘述了。
+
+   注意：`TELEGRAM_TOPIC_ID` 是 Telegram 频道中特定主题的 ID。如果您想将消息发送到频道的特定主题中，请确保设置此变量。如果不设置，消息将发送到频道的主页面。
+
+4. 运行程序：
+   ```
+   node index.js
+   ```
+
+5. 程序将开始监控 Notion 数据库的更新，并将相关信息发送到指定的 Telegram 频道主题中。
 
 ## 许可
 

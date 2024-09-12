@@ -5,6 +5,10 @@
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/)，
 并且本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.1.3] - 2024-09-12
+### 改进
+- 优化 telegram topic 配置，实现固定topic频道发送信息
+
 ## [0.1.2] - 2024-09-12
 
 ### 改进
