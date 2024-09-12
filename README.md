@@ -12,9 +12,9 @@ Uncommons Telegram 频道：https://t.me/theuncommons
 
 ## 主要功能
 
-1. 监控 Notion 数据库中的任务状态变更（进行中、已完成）
-2. 检测 Notion 数据库中的任务内容更新
-3. 实时将任务状态和内容更新发送到 Telegram 频道
+1. 监控 Notion 数据库中的任务状态变更
+2. 检测 Notion 数据库中的任务内容、评论更新
+3. 将任务状态和内容更新发送到 Telegram 频道
 4. 定期检查更新（任务状态每60秒，内容更新每15分钟）
 
 ## 技术栈
