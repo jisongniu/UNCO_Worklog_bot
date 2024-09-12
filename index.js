@@ -27,7 +27,7 @@ async function debugConnections() {
 
   // 测试Telegram消息发送
   try {
-    const testMessage = await bot.sendMessage(channelId, '我是Un小Log，开始赛博上班～\n\n咱先看看过去一天有哪些新鲜事儿', {
+    const testMessage = await bot.sendMessage(channelId, '我是Un小Log，刚眯了会儿觉，我又回来了～', {
       message_thread_id: topicId
     });
     console.log('Telegram消息发送成功。消息ID:', testMessage.message_id);
@@ -37,7 +37,8 @@ async function debugConnections() {
 }
 
 // 检查更新函数
-let lastCheckedTime = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(); // 初始化为24小时前
+let lastCheckedTime = new Date().toISOString(); // 初始化为当前时间
+let lastUpdateCheckTime = new Date().toISOString(); // 初始化为当前时间
 
 async function checkForTaskStatusUpdates() {
   const currentTime = new Date().toISOString();
@@ -136,7 +137,9 @@ function formatDateTime(dateTimeString) {
 }
 
 function formatTaskStatusMessage(page, status) {
-  const activity = page.properties.Activity?.title[0]?.plain_text || '无标题';
+  const activity = page.properties.Activity?.title
+    .map(titlePart => titlePart.plain_text)
+    .join('') || '无标题';
   const executor = page.properties.执行人?.people[0]?.name || '未分配';
   const startTime = formatDateTime(page.properties.触发开始工作?.date?.start || '未开始');
   const endTime = formatDateTime(page.properties.触发完成工作?.date?.start || '未完成');
@@ -162,8 +165,6 @@ function formatTaskStatusMessage(page, status) {
   return message;
 }
 
-// 在文件顶部，其他全局变量声明附近
-let lastUpdateCheckTime = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(); // 初始化为24小时前
 
 // 在程序启动时运行调试函数
 debugConnections().then(() => {
@@ -203,7 +204,9 @@ async function checkForTaskContentUpdates() {
 
     for (const page of updatedPages) {
       const pageId = page.id;
-      const pageTitle = page.properties.Activity?.title[0]?.plain_text || '无标题';
+      const pageTitle = page.properties.Activity?.title
+        .map(titlePart => titlePart.plain_text)
+        .join('') || '无标题';
       const lastEditedTime = formatDateTime(page.last_edited_time);
 
       // 获取页面内容
