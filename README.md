@@ -2,7 +2,7 @@
 
 ## 项目描述
 
-这是一个基于 Node.js 的项目，集成了 Notion API 和 Telegram Bot API。该项目主要功能是监控指定的 Notion 数据库中的任务状态变更和内容更新，并将这些更新发送到指定的 Telegram 频道。
+这是一个基于 Node.js 的项目，集成了 Notion API 和 Telegram Bot API。该项目主要功能是监控指定的 Notion 数据库中的任务状态变更和内容评论更新，并将这些更新发送到指定的 Telegram 频道。
 该项目主要**为 Uncommons 编辑部的 Worklog 服务， 具备一定的定制性**， 仅供参考。
 
 > Uncommons is a public sphere where a collective of public goods builders explores crypto thoughts together.
