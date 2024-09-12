@@ -270,3 +270,8 @@ cron.schedule('*/15 * * * *', async () => {
 });
 
 console.log('Bot is running...');
+
+setInterval(() => {
+  console.clear();
+  console.log('新的日志开始...');
+}, 24 * 60 * 60 * 1000); // 每24小时清理一次
