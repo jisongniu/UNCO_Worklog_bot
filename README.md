@@ -2,13 +2,13 @@
 
 ## 项目描述
 
-这是一个基于 Node.js 的项目，集成了 Notion API 和 Telegram Bot API。该项目主要功能是监控指定的 Notion 数据库中的任务状态变更和内容更新，并将这些更新实时发送到指定的 Telegram 频道。
-该项目主要为 Uncommons 编辑部的 Worklog 服务， 具备一定的定制性， 仅供参考。
+这是一个基于 Node.js 的项目，集成了 Notion API 和 Telegram Bot API。该项目主要功能是监控指定的 Notion 数据库中的任务状态变更和内容更新，并将这些更新发送到指定的 Telegram 频道。
+该项目主要**为 Uncommons 编辑部的 Worklog 服务， 具备一定的定制性**， 仅供参考。
 
-Uncommons is a public sphere where a collective of public goods builders explores crypto thoughts together.
-Uncommons 是区块链世界内一隅公共空间，一群公共物品建设者，在此碰撞加密人文思想。其前身为 GreenPill 中文社区。
+> Uncommons is a public sphere where a collective of public goods builders explores crypto thoughts together.
+> Uncommons 是区块链世界内一隅公共空间，一群公共物品建设者，在此碰撞加密人文思想。其前身为 GreenPill 中文社区。
 
-Uncommons Telegram 频道：https://t.me/theuncommons
+> Uncommons Telegram 频道：https://t.me/theuncommons
 
 ## 主要功能
 
@@ -36,7 +36,7 @@ Uncommons Telegram 频道：https://t.me/theuncommons
 
 1. 克隆仓库：
    ```
-   git clone [仓库URL]
+   git clone https://github.com/BigSongEth/unco_worklog2tg.git
    ```
 
 2. 安装依赖：
@@ -52,11 +52,11 @@ Uncommons Telegram 频道：https://t.me/theuncommons
    TELEGRAM_BOT_TOKEN=你的Telegram机器人令牌
    TELEGRAM_CHANNEL_ID=目标Telegram频道ID
    ```
-
+   这些环境变量的获取网上都有相应的教程， 这里就不赘述了。
 
 ## 许可
 
-本项目采用 MIT 许可证。详细信息请参阅 [LICENSE](LICENSE) 文件。
+本项目采用 MIT 许可证。
 
 ## 免责声明
 
@@ -70,8 +70,10 @@ Uncommons Telegram 频道：https://t.me/theuncommons
 
 如有任何问题或建议，请通过以下方式联系我：
 
-- 电子邮件：[jisongniu@gmail.com]
-- Telegram：[https://t.me/BigSongEth]
+- 电子邮件：[jisongniu@gmail.com](mailto:jisongniu@gmail.com)
+- Telegram：[@BigSongEth](https://t.me/BigSongEth)
 
 感谢您对本项目的关注和支持！
+
+
 
