@@ -26,7 +26,7 @@ async function debugConnections() {
 
   // 测试Telegram消息发送
   try {
-    const testMessage = await bot.sendMessage(channelId, '这里是 Uncommons 社区编辑部 WorkLog。');
+    const testMessage = await bot.sendMessage(channelId, '我是Un小Log，开始赛博上班～\n\n咱先看看过去一天有哪些新鲜事儿');
     console.log('Telegram消息发送成功。消息ID:', testMessage.message_id);
   } catch (error) {
     console.error('Telegram息发送失:', error.message);
@@ -39,9 +39,7 @@ let lastCheckedTime = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(); 
 async function checkForTaskStatusUpdates() {
   const currentTime = new Date().toISOString();
   console.log(`开始检查更新，当前时间: ${currentTime}`);
-  console.log(`上次检查时间: ${lastCheckedTime}`);
 
-  console.log("执行带过滤器的查询...");
   try {
     const response = await notion.databases.query({
       database_id: databaseId,
@@ -85,7 +83,7 @@ async function checkForTaskStatusUpdates() {
     });
 
     const allResults = response.results;
-    console.log(`检测到${allResults.length}个更新。`);
+    //console.log(`检测到${allResults.length}个更新。`);
 
     if (allResults.length > 0) {
       for (const page of allResults) {
@@ -109,7 +107,7 @@ async function checkForTaskStatusUpdates() {
   }
 
   lastCheckedTime = currentTime;
-  console.log(`更新后的lastCheckedTime: ${lastCheckedTime}`);
+  //console.log(`更新后的lastCheckedTime: ${lastCheckedTime}`);
   console.log('------------------------');
 }
 
@@ -148,7 +146,11 @@ function formatTaskStatusMessage(page, status) {
   if (status === '已完成') {
     message += `✅ <b>完成时间</b>：${endTime}\n`;
   }
-  message += `\n🔍 <a href="${page.url}">查看详情</a>`;
+  if (status === '进行中') {
+    message += `\n🔍 <a href="${page.url}">点开看能帮啥</a>`;
+  } else {
+    message += `\n🔍 <a href="${page.url}">Bravo！来瞅瞅</a>`;
+  }
 
   return message;
 }
@@ -222,7 +224,7 @@ async function checkForTaskContentUpdates() {
         });
       }
 
-      updateMessage += `\n\n🔍 <a href="${page.url}">查看详情</a>`;
+      updateMessage += `\n\n🔍 <a href="${page.url}">前排围观！</a>`;
 
       try {
         await bot.sendMessage(channelId, updateMessage, { parse_mode: 'HTML', disable_web_page_preview: true });
