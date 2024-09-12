@@ -217,7 +217,7 @@ async function checkForTaskContentUpdates() {
       if (newComments.length > 0) {
         updateMessage += `\n💬 <b>新评论</b>：${newComments.length}条\n`;
         newComments.forEach((comment, index) => {
-          const commentAuthor = comment.created_by.name || '匿名用户';
+          const commentAuthor = comment.created_by.name || comment.created_by.person?.name || '匿名用户';
           const commentContent = comment.rich_text[0]?.plain_text || '空评论';
           const commentTime = formatDateTime(comment.created_time);
           updateMessage += `\n${index + 1}. <i>${commentAuthor}</i> (${commentTime}): ${commentContent.substring(0, 50)}${commentContent.length > 50 ? '...' : ''}`;
