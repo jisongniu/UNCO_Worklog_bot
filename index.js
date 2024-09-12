@@ -42,7 +42,7 @@ let lastUpdateCheckTime = new Date().toISOString(); // 初始化为当前时间
 
 async function checkForTaskStatusUpdates() {
   const currentTime = new Date().toISOString();
-  console.log(`开始检查更新，当前时间: ${currentTime}`);
+  console.log(`🚀 开始检查任务更新，当前时间: ${currentTime}`);
 
   try {
     const response = await notion.databases.query({
@@ -116,7 +116,7 @@ async function checkForTaskStatusUpdates() {
 
   lastCheckedTime = currentTime;
   //console.log(`更新后的lastCheckedTime: ${lastCheckedTime}`);
-  console.log('------------------------');
+  //console.log('------------------------');
 }
 
 // 添加这个辅助函数来格式化日期时间
@@ -184,8 +184,7 @@ debugConnections().then(() => {
 
 async function checkForTaskContentUpdates() {
   const currentTime = new Date().toISOString();
-  console.log(`开始检查内容更新，当前时间: ${currentTime}`);
-  console.log(`上次检查时间: ${lastUpdateCheckTime}`);
+  console.log(`📒 开始检查内容评论更新，当前时间: ${currentTime}`);
 
   try {
     const response = await notion.databases.query({
@@ -200,7 +199,9 @@ async function checkForTaskContentUpdates() {
     });
 
     const updatedPages = response.results;
-    console.log(`检测到${updatedPages.length}个页面有内容更新。`);
+    let propertyUpdates = 0;
+    let contentUpdates = 0;
+    let commentUpdates = 0;
 
     for (const page of updatedPages) {
       const pageId = page.id;
@@ -208,51 +209,72 @@ async function checkForTaskContentUpdates() {
         .map(titlePart => titlePart.plain_text)
         .join('') || '无标题';
       const lastEditedTime = formatDateTime(page.last_edited_time);
+      
+      let hasContentUpdate = false;
+      let hasNewComments = false;
 
-      // 获取页面内容
+      // 检查属性更新
+      if (page.last_edited_time > lastUpdateCheckTime) {
+        propertyUpdates++;
+      }
+
+      // 检查内容更新
       const pageContent = await getPageContent(pageId);
+      if (pageContent.trim() !== '') {
+        contentUpdates++;
+        hasContentUpdate = true;
+      }
 
-      // 获取页面评论
+      // 检查评论更新
       const comments = await notion.comments.list({ block_id: pageId });
       const newComments = comments.results.filter(comment => new Date(comment.created_time) > new Date(lastUpdateCheckTime));
-
-      let updateMessage = `📝 <b>任务内容更新</b>\n\n`;
-      updateMessage += `🔖 <b>任务</b>：${pageTitle}\n`;
-      updateMessage += `🕒 <b>更新时间</b>：${lastEditedTime}\n`;
-
-      if (pageContent) {
-        updateMessage += `\n📄 <b>内容变更</b>：\n${pageContent.substring(0, 200)}${pageContent.length > 200 ? '...' : ''}\n`;
+      if (newComments.length > 0) {
+        commentUpdates++;
+        hasNewComments = true;
       }
 
-      if (newComments.length > 0) {
-        updateMessage += `\n💬 <b>新评论</b>：${newComments.length}条\n`;
-        newComments.forEach((comment, index) => {
+      // 只在有内容更新或新评论时发送 Telegram 消息
+      if (hasContentUpdate || hasNewComments) {
+        let updateMessage = `📝 <b>任务更新</b>\n\n`;
+        updateMessage += `🔖 <b>任务</b>：${pageTitle}\n`;
+        updateMessage += `🕒 <b>更新时间</b>：${lastEditedTime}\n`;
+
+        if (hasContentUpdate) {
+          updateMessage += `\n📄 <b>内容变更</b>：\n${pageContent.substring(0, 200)}${pageContent.length > 200 ? '...' : ''}\n`;
+        }
+
+        if (hasNewComments) {
+          updateMessage += `\n💬 <b>新评论</b>：${newComments.length}条\n`;
+          newComments.forEach((comment, index) => {
             const commentAuthor = comment.created_by.name || comment.created_by.person?.name || '匿名用户';
             const commentContent = comment.rich_text[0]?.plain_text || '空评论';
-          const commentTime = formatDateTime(comment.created_time);
-          updateMessage += `\n${index + 1}. <i>${commentAuthor}</i> (${commentTime}): ${commentContent.substring(0, 50)}${commentContent.length > 50 ? '...' : ''}`;
-        });
-      }
+            const commentTime = formatDateTime(comment.created_time);
+            updateMessage += `\n${index + 1}. <i>${commentAuthor}</i> (${commentTime}): ${commentContent.substring(0, 50)}${commentContent.length > 50 ? '...' : ''}`;
+          });
+        }
 
-      updateMessage += `\n\n🔍 <a href="${page.url}">前排围观！</a>`;
+        updateMessage += `\n\n🔍 <a href="${page.url}">前排围观！</a>`;
 
-      try {
-        await bot.sendMessage(channelId, updateMessage, { 
-          parse_mode: 'HTML', 
-          disable_web_page_preview: true,
-          message_thread_id: topicId
-        });
-        console.log(`已发送更新到Telegram: ${pageTitle}`);
-      } catch (error) {
-        console.error(`发送消息失败: ${error.message}`);
+        try {
+          await bot.sendMessage(channelId, updateMessage, { 
+            parse_mode: 'HTML', 
+            disable_web_page_preview: true,
+            message_thread_id: topicId
+          });
+          console.log(`已发送更新到Telegram: ${pageTitle}`);
+        } catch (error) {
+          console.error(`发送消息失败: ${error.message}`);
+        }
       }
     }
+
+    console.log(`检测到更新情况： - ${contentUpdates} 个页面有内容更新，${commentUpdates} 个页面有新评论`);
 
     if (updatedPages.length === 0) {
-      console.log('没有检测到内容更新。');
+      console.log('没有检测到任何更新。');
     }
   } catch (error) {
-    console.error('检查内容更新时发生错误:', error.message);
+    console.error('检查更新时发生错误:', error.message);
   }
 
   lastUpdateCheckTime = currentTime;
@@ -261,24 +283,24 @@ async function checkForTaskContentUpdates() {
 }
 
 async function getPageContent(pageId) {
-  try {
-    const response = await notion.blocks.children.list({
-      block_id: pageId,
-      page_size: 50,
-    });
-
-    let content = '';
-    for (const block of response.results) {
-      if (block.type === 'paragraph' && block.paragraph.rich_text.length > 0) {
-        content += block.paragraph.rich_text.map(text => text.plain_text).join('') + '\n';
+    try {
+      const response = await notion.blocks.children.list({
+        block_id: pageId,
+        page_size: 50,
+      });
+  
+      let content = '';
+      for (const block of response.results) {
+        if (block.type === 'paragraph' && block.paragraph.rich_text.length > 0) {
+          content += block.paragraph.rich_text.map(text => text.plain_text).join('') + '\n';
+        }
       }
+      return content.trim();
+    } catch (error) {
+      console.error('获取页面内容时发生错误:', error.message);
+      return '';
     }
-    return content.trim();
-  } catch (error) {
-    console.error('获取页面内容时发生错误:', error.message);
-    return '';
   }
-}
 
 // 每15分钟执行一次内容更新检查
 cron.schedule('*/15 * * * *', async () => {
