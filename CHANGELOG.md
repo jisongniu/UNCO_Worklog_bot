@@ -58,3 +58,10 @@
 
 ### 变更
 - 修改了 `checkForTaskContentUpdates` 和 `getPageContent` 函数，以更精确地检测内容更新。
+
+## [0.2.2] - 2024-09-12
+### 新增
+- 新增 `userUtils.js` 模块，实现用户名称的获取和缓存功能
+### 修复
+- 修复了可能导致未知用户显示问题的 bug，优化了 `checkForTaskContentUpdates` 函数中的评论处理逻辑
+- 解决了在某些情况下无法正确获取页面内容的问题

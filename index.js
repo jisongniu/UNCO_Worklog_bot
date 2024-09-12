@@ -2,6 +2,7 @@ require('dotenv').config();
 const { Client } = require('@notionhq/client');
 const TelegramBot = require('node-telegram-bot-api');
 const cron = require('node-cron');
+const { getUserName } = require('./userUtils');
 
 const notion = new Client({ auth: process.env.NOTION_API_KEY });
 const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN);
@@ -245,12 +246,12 @@ async function checkForTaskContentUpdates() {
 
         if (hasNewComments) {
           updateMessage += `\n💬 <b>新评论</b>：${newComments.length}条\n`;
-          newComments.forEach((comment, index) => {
-            const commentAuthor = comment.created_by.name || comment.created_by.person?.name || '匿名用户';
+          for (const comment of newComments) {
+            const commentAuthor = await getUserName(comment.created_by.id);
             const commentContent = comment.rich_text[0]?.plain_text || '空评论';
             const commentTime = formatDateTime(comment.created_time);
-            updateMessage += `\n${index + 1}. <i>${commentAuthor}</i> (${commentTime}): ${commentContent.substring(0, 50)}${commentContent.length > 50 ? '...' : ''}`;
-          });
+            updateMessage += `\n- <i>${commentAuthor}</i> (${commentTime}): ${commentContent.substring(0, 50)}${commentContent.length > 50 ? '...' : ''}`;
+          }
         }
 
         updateMessage += `\n\n🔍 <a href="${page.url}">前排围观！</a>`;
