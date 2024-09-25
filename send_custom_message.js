@@ -14,9 +14,13 @@ if (!BOT_TOKEN || !CHAT_ID) {
 
 const bot = new TelegramBot(BOT_TOKEN);
 
-function sendTelegramMessage(message) {
+function sendTelegramMessage(message, useHTML = false) {
     console.log('准备发送消息:', message);
-    const options = TOPIC_ID ? { message_thread_id: TOPIC_ID } : {};
+    const options = {
+        message_thread_id: TOPIC_ID,
+        parse_mode: useHTML ? 'HTML' : undefined,
+        disable_web_page_preview: true
+    };
     bot.sendMessage(CHAT_ID, message, options)
         .then(() => {
             console.log("消息发送成功！");
@@ -29,14 +33,17 @@ function sendTelegramMessage(message) {
 }
 
 if (process.argv.length > 2) {
-    const message = process.argv.slice(2).join(' ');
-    sendTelegramMessage(message);
+    const useHTML = process.argv.includes('--html');
+    const message = process.argv.filter(arg => arg !== '--html').slice(2).join(' ');
+    sendTelegramMessage(message, useHTML);
 } else {
-    console.log("请输入要发送的消息:");
+    console.log("请输入要发送的消息 (使用 --html 参数来发送 HTML 格式的消息):");
     process.stdin.once('data', (data) => {
-        const message = data.toString().trim();
+        const input = data.toString().trim();
+        const useHTML = input.startsWith('--html');
+        const message = useHTML ? input.slice(6).trim() : input;
         if (message) {
-            sendTelegramMessage(message);
+            sendTelegramMessage(message, useHTML);
         } else {
             console.log("没有输入消息，退出程序。");
             process.exit(0);
