@@ -200,7 +200,6 @@ async function checkForTaskContentUpdates() {
     });
 
     const updatedPages = response.results;
-    let propertyUpdates = 0;
     let contentUpdates = 0;
     let commentUpdates = 0;
 
@@ -214,13 +213,8 @@ async function checkForTaskContentUpdates() {
       let hasContentUpdate = false;
       let hasNewComments = false;
 
-      // 检查属性更新
-      if (page.last_edited_time > lastUpdateCheckTime) {
-        propertyUpdates++;
-      }
-
       // 检查内容更新
-      const pageContent = await getPageContent(pageId);
+      const { content: pageContent, hasMore } = await getPageContent(pageId);
       if (pageContent.trim() !== '') {
         contentUpdates++;
         hasContentUpdate = true;
@@ -238,23 +232,27 @@ async function checkForTaskContentUpdates() {
       if (hasContentUpdate || hasNewComments) {
         let updateMessage = `📝 <b>任务更新</b>\n\n`;
         updateMessage += `🔖 <b>任务</b>：${pageTitle}\n`;
-        updateMessage += `🕒 <b>更新时间</b>：${lastEditedTime}\n`;
+        //updateMessage += `🕒 <b>更新时间</b>：${lastEditedTime}\n`; 这个不要显示了
 
         if (hasContentUpdate) {
-          updateMessage += `\n📄 <b>内容变更</b>：\n${pageContent.substring(0, 200)}${pageContent.length > 200 ? '...' : ''}\n`;
+          updateMessage += `\n📄 <b>内容变更</b>：\n${pageContent}`;
+          if (hasMore) {
+            updateMessage += '\n...(内容较多，仅显示部分)';
+          }
+          updateMessage += '\n';
         }
 
         if (hasNewComments) {
-          updateMessage += `\n💬 <b>新评论</b>：${newComments.length}条\n`;
+          updateMessage += `\n💬 <b>新评论</b>：\n`;
           for (const comment of newComments) {
             const commentAuthor = await getUserName(comment.created_by.id);
             const commentContent = comment.rich_text[0]?.plain_text || '空评论';
             const commentTime = formatDateTime(comment.created_time);
-            updateMessage += `\n- <i>${commentAuthor}</i> (${commentTime}): ${commentContent.substring(0, 50)}${commentContent.length > 50 ? '...' : ''}`;
+            updateMessage += `- <i>${commentAuthor}</i> (${commentTime}): ${commentContent.substring(0, 150)}${commentContent.length > 150 ? '...' : ''}\n`;
           }
         }
 
-        updateMessage += `\n\n🔍 <a href="${page.url}">前排围观！</a>`;
+        updateMessage += `\n🔍 <a href="${page.url}">前排围观！</a>`;
 
         try {
           await bot.sendMessage(channelId, updateMessage, { 
@@ -284,26 +282,72 @@ async function checkForTaskContentUpdates() {
 }
 
 async function getPageContent(pageId) {
-    try {
-      const response = await notion.blocks.children.list({
-        block_id: pageId,
-        page_size: 50,
-      });
-  
-      let content = '';
-      for (const block of response.results) {
-        if (block.type === 'paragraph' && block.paragraph.rich_text.length > 0) {
-          content += block.paragraph.rich_text.map(text => text.plain_text).join('') + '\n';
+  try {
+    const response = await notion.blocks.children.list({
+      block_id: pageId,
+      page_size: 100,
+    });
+
+    let updates = [];
+    const maxLength = 500;
+    let totalLength = 0;
+    let lastEditor = null;
+    let currentEditorContent = [];
+
+    for (const block of response.results) {
+      if (new Date(block.last_edited_time) > new Date(lastUpdateCheckTime)) {
+        let content = '';
+        if (block.type === 'paragraph') {
+          content = block.paragraph.rich_text.map(text => text.plain_text).join('');
+        } else if (['heading_1', 'heading_2', 'heading_3'].includes(block.type)) {
+          content = block[block.type].rich_text.map(text => text.plain_text).join('');
+        } else if (block.type === 'bulleted_list_item' || block.type === 'numbered_list_item') {
+          content = '- ' + block[block.type].rich_text.map(text => text.plain_text).join('');
+        } else if (block.type === 'quote') {
+          content = block.quote.rich_text.map(text => text.plain_text).join('');
+        }
+
+        if (content) {
+          const currentEditor = block.last_edited_by.id;
+          
+          if (currentEditor !== lastEditor) {
+            if (currentEditorContent.length > 0) {
+              const userName = await getUserName(lastEditor);
+              const editTime = formatDateTime(block.last_edited_time);
+              updates.push(`${userName}（${editTime}）：\n${currentEditorContent.join('\n')}`);
+              totalLength += updates[updates.length - 1].length;
+            }
+            currentEditorContent = [content];
+            lastEditor = currentEditor;
+          } else {
+            currentEditorContent.push(content);
+          }
+          
+          if (totalLength >= maxLength) {
+            break;
+          }
         }
       }
-      return content.trim();
-    } catch (error) {
-      console.error('获取页面内容时发生错误:', error.message);
-      return '';
     }
-  }
 
-// 每15分钟执行一次内容更新检查
+    // 添加最后一个编辑者的内容
+    if (currentEditorContent.length > 0 && totalLength < maxLength) {
+      const userName = await getUserName(lastEditor);
+      const editTime = formatDateTime(response.results[response.results.length - 1].last_edited_time);
+      updates.push(`${userName}（${editTime}）：\n${currentEditorContent.join('\n')}`);
+    }
+
+    return {
+      content: updates.join('\n\n'),
+      hasMore: totalLength >= maxLength || response.has_more
+    };
+  } catch (error) {
+    console.error('获取页面内容时发生错误:', error.message);
+    return { content: '', hasMore: false };
+  }
+}
+
+// 每3分钟执行一次内容更新检查
 cron.schedule('*/15 * * * *', async () => {
   await checkForTaskContentUpdates();
 });

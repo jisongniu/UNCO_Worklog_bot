@@ -13,4 +13,3 @@ async function testConnection() {
 }
 
 testConnection();
-这样培训
